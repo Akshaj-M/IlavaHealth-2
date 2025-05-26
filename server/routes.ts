@@ -9,29 +9,40 @@ import twilio from 'twilio';
 import session from 'express-session';
 import cors from 'cors';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'ilava-jwt-secret-fallback-key-2024';
+const SESSION_SECRET = process.env.SESSION_SECRET || 'ilava-session-secret-fallback-key-2024';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
 // Initialize services
-const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
-const twilioClient = TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN ? 
+const googleClient = GOOGLE_CLIENT_ID ? new OAuth2Client(GOOGLE_CLIENT_ID) : null;
+const twilioClient = (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) ? 
   twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) : null;
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  // Enable CORS and sessions
+export function registerRoutes(app: Express): Server {
+  // Enable CORS for development
   app.use(cors({
-    origin: true,
-    credentials: true
+    origin: process.env.NODE_ENV === 'production' 
+      ? false 
+      : ['http://localhost:5173', 'http://0.0.0.0:5173', 'https://*.replit.dev', 'https://*.replit.app'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
   }));
-  
+
+  // Session middleware
   app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-session-secret',
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
+    }
   }));
 
   // Helper function to generate JWT token
@@ -233,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Google ID token is required' });
       }
 
-      if (!GOOGLE_CLIENT_ID) {
+      if (!googleClient || !GOOGLE_CLIENT_ID) {
         return res.status(500).json({ error: 'Google OAuth not configured' });
       }
 
@@ -407,6 +418,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json({ success: true, message: 'Logged out successfully' });
     });
+  });
+
+  // Health check route for database connection
+  app.get('/api/health', async (req, res) => {
+    try {
+      // Test database connection by trying to get user count
+      const users = await storage.getAllUsers();
+      res.json({ 
+        status: 'ok', 
+        database: 'connected',
+        userCount: users.length,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Database health check failed:', error);
+      res.status(500).json({ 
+        status: 'error', 
+        database: 'disconnected',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+    }
   });
 
   const httpServer = createServer(app);

@@ -1,4 +1,3 @@
-
 import { db } from "./db";
 import { users, otpCodes, sessions } from "@shared/schema";
 import { eq, and, gt } from "drizzle-orm";
@@ -77,11 +76,15 @@ export const storage = {
       .where(eq(users.id, userId));
   },
 
+  async getAllUsers() {
+    return await db.select().from(users);
+  },
+
   // OTP methods
   async createOTP(otpData: CreateOTPData) {
     // Delete any existing OTPs for this phone
     await db.delete(otpCodes).where(eq(otpCodes.phone, otpData.phone));
-    
+
     const [otp] = await db.insert(otpCodes).values({
       ...otpData,
       createdAt: new Date()
