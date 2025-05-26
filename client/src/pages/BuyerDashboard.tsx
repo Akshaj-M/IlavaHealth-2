@@ -21,6 +21,8 @@ import {
 } from 'react-icons/fa';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import AIAssistant from '@/components/AIAssistant';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 interface Product {
   id: number;
@@ -38,16 +40,17 @@ export default function BuyerDashboard() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const { t } = useLanguage();
 
   const categories = [
-    { id: 'all', name: 'All Products', icon: FaShoppingBasket },
-    { id: 'compost', name: 'Compost', icon: FaSeedling },
-    { id: 'plant-waste', name: 'Plant Waste', icon: FaLeaf },
-    { id: 'crop-residues', name: 'Crop Residues', icon: FaTractor },
-    { id: 'fruit-waste', name: 'Fruit Waste', icon: FaAppleAlt },
-    { id: 'organic-waste', name: 'Organic Waste', icon: FaSeedling },
-    { id: 'bio-fertilizers', name: 'Bio Fertilizers', icon: FaLeaf },
-    { id: 'recycled', name: 'Recycled Products', icon: FaRecycle },
+    { id: 'all', name: t('all_products'), icon: FaShoppingBasket },
+    { id: 'compost', name: t('compost'), icon: FaSeedling },
+    { id: 'plant-waste', name: t('plant_waste'), icon: FaLeaf },
+    { id: 'crop-residues', name: t('crop_residues'), icon: FaTractor },
+    { id: 'fruit-waste', name: t('fruit_waste'), icon: FaAppleAlt },
+    { id: 'organic-waste', name: t('organic_waste'), icon: FaSeedling },
+    { id: 'bio-fertilizers', name: t('bio_fertilizers'), icon: FaLeaf },
+    { id: 'recycled', name: t('recycled_products'), icon: FaRecycle },
   ];
 
   const featuredProducts: Product[] = [
@@ -263,7 +266,7 @@ export default function BuyerDashboard() {
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3 p-3 rounded-lg bg-blue-50">
                       <FaShoppingBasket className="h-6 w-6 text-blue-600" />
-                      <span className="font-semibold text-blue-700">Buyer Menu</span>
+                      <span className="font-semibold text-blue-700">{t('buyer_menu')}</span>
                     </div>
                     
                     <nav className="space-y-2">
@@ -273,7 +276,7 @@ export default function BuyerDashboard() {
                         onClick={() => setLocation('/buyer')}
                       >
                         <FaHome className="mr-2 h-4 w-4" />
-                        Home
+                        {t('home')}
                       </Button>
                       
                       <Button 
@@ -282,7 +285,7 @@ export default function BuyerDashboard() {
                         onClick={() => setLocation('/categories')}
                       >
                         <FaLeaf className="mr-2 h-4 w-4" />
-                        Categories
+                        {t('categories')}
                       </Button>
                       
                       <Button 
@@ -291,7 +294,7 @@ export default function BuyerDashboard() {
                         onClick={() => setLocation('/my-orders')}
                       >
                         <FaShoppingCart className="mr-2 h-4 w-4" />
-                        My Orders
+                        {t('my_orders')}
                       </Button>
                       
                       <Button 
@@ -300,7 +303,7 @@ export default function BuyerDashboard() {
                         onClick={() => setLocation('/favorites')}
                       >
                         <FaHeart className="mr-2 h-4 w-4" />
-                        Favorites
+                        {t('favorites')}
                       </Button>
                       
                       <Button 
@@ -309,7 +312,7 @@ export default function BuyerDashboard() {
                         onClick={() => setLocation('/profile')}
                       >
                         <FaUser className="mr-2 h-4 w-4" />
-                        My Profile
+                        {t('my_profile')}
                       </Button>
                     </nav>
                   </div>
@@ -317,12 +320,15 @@ export default function BuyerDashboard() {
               </SheetContent>
             </Sheet>
             
-            <h1 className="text-xl font-bold text-gray-900">ILAVA Marketplace</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('buyer_dashboard')}</h1>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <FaShoppingBasket className="h-8 w-8 text-blue-600" />
-            <span className="font-bold text-blue-700">ILAVA</span>
+          <div className="flex items-center space-x-3">
+            <LanguageToggle />
+            <div className="flex items-center space-x-2">
+              <FaShoppingBasket className="h-8 w-8 text-blue-600" />
+              <span className="font-bold text-blue-700">ILAVA</span>
+            </div>
           </div>
         </div>
       </header>
@@ -333,7 +339,7 @@ export default function BuyerDashboard() {
           <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             type="text"
-            placeholder="Search organic products..."
+            placeholder={t('search_organic_products')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 pr-4"
@@ -343,7 +349,7 @@ export default function BuyerDashboard() {
 
       {/* Categories */}
       <div className="p-4">
-        <h2 className="text-lg font-semibold mb-4">Categories</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('categories')}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {categories.map((category) => (
             <Card 
@@ -372,12 +378,12 @@ export default function BuyerDashboard() {
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">
-            {selectedCategory === 'all' ? 'Featured Products' : 
-             categories.find(c => c.id === selectedCategory)?.name || 'Products'}
+            {selectedCategory === 'all' ? t('featured_products') : 
+             categories.find(c => c.id === selectedCategory)?.name || t('products')}
           </h2>
           <Button variant="outline" size="sm">
             <FaFilter className="mr-2 h-4 w-4" />
-            Filter
+            {t('filter')}
           </Button>
         </div>
 
@@ -425,14 +431,14 @@ export default function BuyerDashboard() {
                     }}
                   >
                     <FaShoppingCart className="mr-2 h-4 w-4" />
-                    Add to Cart
+                    {t('add_to_cart')}
                   </Button>
                   <Button 
                     size="sm" 
                     variant="outline"
                     onClick={() => setLocation(`/product/${product.id}`)}
                   >
-                    View
+                    {t('view')}
                   </Button>
                 </div>
               </CardContent>
@@ -443,8 +449,8 @@ export default function BuyerDashboard() {
         {filteredProducts.length === 0 && (
           <div className="text-center py-8">
             <FaLeaf className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">No products found</h3>
-            <p className="text-gray-500">Try adjusting your search or category filter</p>
+            <h3 className="text-lg font-semibold text-gray-600 mb-2">{t('no_products_found')}</h3>
+            <p className="text-gray-500">{t('adjust_search_filter')}</p>
           </div>
         )}
       </div>
@@ -458,7 +464,7 @@ export default function BuyerDashboard() {
             onClick={() => setLocation('/buyer')}
           >
             <FaHome className="h-5 w-5 mb-1" />
-            <span className="text-xs">Home</span>
+            <span className="text-xs">{t('home')}</span>
           </Button>
           <Button 
             variant="ghost" 
@@ -466,7 +472,7 @@ export default function BuyerDashboard() {
             onClick={() => setLocation('/categories')}
           >
             <FaLeaf className="h-5 w-5 mb-1" />
-            <span className="text-xs">Categories</span>
+            <span className="text-xs">{t('categories')}</span>
           </Button>
           <Button 
             variant="ghost" 
@@ -474,7 +480,7 @@ export default function BuyerDashboard() {
             onClick={() => setLocation('/search')}
           >
             <FaSearch className="h-5 w-5 mb-1" />
-            <span className="text-xs">Search</span>
+            <span className="text-xs">{t('search')}</span>
           </Button>
           <Button 
             variant="ghost" 
@@ -482,7 +488,7 @@ export default function BuyerDashboard() {
             onClick={() => setLocation('/cart')}
           >
             <FaShoppingCart className="h-5 w-5 mb-1" />
-            <span className="text-xs">Cart</span>
+            <span className="text-xs">{t('cart')}</span>
           </Button>
           <Button 
             variant="ghost" 
@@ -490,7 +496,7 @@ export default function BuyerDashboard() {
             onClick={() => setLocation('/profile')}
           >
             <FaUser className="h-5 w-5 mb-1" />
-            <span className="text-xs">Profile</span>
+            <span className="text-xs">{t('profile')}</span>
           </Button>
         </div>
       </nav>

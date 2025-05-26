@@ -22,21 +22,21 @@ function Router() {
       <Route path="/" component={Splash} />
       <Route path="/login" component={Login} />
       <Route path="/home" component={Home} />
-      
+
       {/* Farmer Routes */}
       <Route path="/farmer" component={FarmerDashboard} />
       <Route path="/sell-waste" component={SellWaste} />
-      
+
       {/* Buyer Routes */}
       <Route path="/buyer" component={BuyerDashboard} />
-      
+
       {/* Shared Routes */}
       <Route path="/my-orders" component={MyOrders} />
       <Route path="/favorites" component={Favorites} />
       <Route path="/profile" component={Profile} />
       <Route path="/categories" component={Categories} />
       <Route path="/cart" component={Cart} />
-      
+
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
@@ -47,8 +47,23 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Router />
+        <LanguageProvider>
+          <Switch>
+            <Route path="/" component={Splash} />
+            <Route path="/home" component={Home} />
+            <Route path="/login" component={Login} />
+            <Route path="/farmer" component={FarmerDashboard} />
+            <Route path="/buyer" component={BuyerDashboard} />
+            <Route path="/sell-waste" component={SellWaste} />
+            <Route path="/my-orders" component={MyOrders} />
+            <Route path="/favorites" component={Favorites} />
+            <Route path="/profile" component={Profile} />
+            <Route path="/categories" component={Categories} />
+            <Route path="/cart" component={Cart} />
+            <Route component={NotFound} />
+          </Switch>
+          <Toaster />
+        </LanguageProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

@@ -18,22 +18,25 @@ import {
 } from 'react-icons/fa';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import AIAssistant from '@/components/AIAssistant';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 export default function FarmerDashboard() {
   const [, setLocation] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { t } = useLanguage();
 
   const quickStats = [
-    { title: 'Active Listings', value: '12', icon: FaLeaf, color: 'text-green-600' },
-    { title: 'Total Sales', value: '₹45,680', icon: FaRupeeSign, color: 'text-blue-600' },
-    { title: 'Pending Orders', value: '8', icon: FaShoppingCart, color: 'text-orange-600' },
-    { title: 'Profile Views', value: '156', icon: FaEye, color: 'text-purple-600' },
+    { title: t('active_listings'), value: '12', icon: FaLeaf, color: 'text-green-600' },
+    { title: t('total_sales'), value: '₹45,680', icon: FaRupeeSign, color: 'text-blue-600' },
+    { title: t('pending_orders'), value: '8', icon: FaShoppingCart, color: 'text-orange-600' },
+    { title: t('profile_views'), value: '156', icon: FaEye, color: 'text-purple-600' },
   ];
 
   const recentListings = [
-    { name: 'Rice Husk', quantity: '50 kg', price: '₹15/kg', status: 'Active' },
-    { name: 'Wheat Straw', quantity: '100 kg', price: '₹8/kg', status: 'Sold' },
-    { name: 'Corn Stalks', quantity: '75 kg', price: '₹12/kg', status: 'Active' },
+    { name: 'Rice Husk', quantity: '50 kg', price: '₹15/kg', status: t('active') },
+    { name: 'Wheat Straw', quantity: '100 kg', price: '₹8/kg', status: t('sold') },
+    { name: 'Corn Stalks', quantity: '75 kg', price: '₹12/kg', status: t('active') },
   ];
 
   return (
@@ -53,7 +56,7 @@ export default function FarmerDashboard() {
                   <div className="space-y-4">
                     <div className="flex items-center space-x-3 p-3 rounded-lg bg-green-50">
                       <FaLeaf className="h-6 w-6 text-green-600" />
-                      <span className="font-semibold text-green-700">Farmer Menu</span>
+                      <span className="font-semibold text-green-700">{t('farmer_menu')}</span>
                     </div>
 
                     <nav className="space-y-2">
@@ -63,7 +66,7 @@ export default function FarmerDashboard() {
                         onClick={() => setLocation('/farmer')}
                       >
                         <FaHome className="mr-2 h-4 w-4" />
-                        Dashboard
+                        {t('dashboard')}
                       </Button>
 
                       <Button 
@@ -72,7 +75,7 @@ export default function FarmerDashboard() {
                         onClick={() => setLocation('/sell-waste')}
                       >
                         <FaCamera className="mr-2 h-4 w-4" />
-                        Sell Your Waste
+                        {t('sell_your_waste')}
                       </Button>
 
                       <Button 
@@ -81,7 +84,7 @@ export default function FarmerDashboard() {
                         onClick={() => setLocation('/my-orders')}
                       >
                         <FaShoppingCart className="mr-2 h-4 w-4" />
-                        My Orders
+                        {t('my_orders')}
                       </Button>
 
                       <Button 
@@ -90,7 +93,7 @@ export default function FarmerDashboard() {
                         onClick={() => setLocation('/favorites')}
                       >
                         <FaHeart className="mr-2 h-4 w-4" />
-                        Favorites
+                        {t('favorites')}
                       </Button>
 
                       <Button 
@@ -99,7 +102,7 @@ export default function FarmerDashboard() {
                         onClick={() => setLocation('/profile')}
                       >
                         <FaUser className="mr-2 h-4 w-4" />
-                        My Profile
+                        {t('my_profile')}
                       </Button>
                     </nav>
                   </div>
@@ -107,12 +110,15 @@ export default function FarmerDashboard() {
               </SheetContent>
             </Sheet>
 
-            <h1 className="text-xl font-bold text-gray-900">Farmer Dashboard</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('farmer_dashboard')}</h1>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <FaLeaf className="h-8 w-8 text-green-600" />
-            <span className="font-bold text-green-700">ILAVA</span>
+          <div className="flex items-center space-x-3">
+            <LanguageToggle />
+            <div className="flex items-center space-x-2">
+              <FaLeaf className="h-8 w-8 text-green-600" />
+              <span className="font-bold text-green-700">ILAVA</span>
+            </div>
           </div>
         </div>
       </header>
@@ -122,9 +128,9 @@ export default function FarmerDashboard() {
         {/* Welcome Section */}
         <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
           <CardContent className="p-6">
-            <h2 className="text-2xl font-bold mb-2">Welcome back, Farmer!</h2>
+            <h2 className="text-2xl font-bold mb-2">{t('welcome_farmer')}</h2>
             <p className="text-green-100 mb-4">
-              Turn your agricultural waste into valuable income with ILAVA
+              {t('welcome_subtitle')}
             </p>
             <Button 
               variant="secondary" 
@@ -132,7 +138,7 @@ export default function FarmerDashboard() {
               className="bg-white text-green-600 hover:bg-gray-100"
             >
               <FaPlus className="mr-2 h-4 w-4" />
-              List New Waste
+              {t('list_new_waste')}
             </Button>
           </CardContent>
         </Card>
@@ -157,7 +163,7 @@ export default function FarmerDashboard() {
         {/* Recent Listings */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Listings</CardTitle>
+            <CardTitle>{t('recent_listings')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -172,7 +178,7 @@ export default function FarmerDashboard() {
                   </div>
                   <div className="text-right">
                     <p className="font-semibold">{listing.price}</p>
-                    <Badge variant={listing.status === 'Active' ? 'default' : 'secondary'}>
+                    <Badge variant={listing.status === t('active') ? 'default' : 'secondary'}>
                       {listing.status}
                     </Badge>
                   </div>
@@ -180,7 +186,7 @@ export default function FarmerDashboard() {
               ))}
             </div>
             <Button variant="outline" className="w-full mt-4">
-              View All Listings
+              {t('view_all_listings')}
             </Button>
           </CardContent>
         </Card>
@@ -191,8 +197,8 @@ export default function FarmerDashboard() {
                 onClick={() => setLocation('/sell-waste')}>
             <CardContent className="p-6 text-center">
               <FaCamera className="h-12 w-12 text-green-600 mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Scan & Sell Waste</h3>
-              <p className="text-sm text-gray-600">Use AI to identify and price your waste</p>
+              <h3 className="font-semibold mb-2">{t('scan_sell_waste')}</h3>
+              <p className="text-sm text-gray-600">{t('ai_identify_price')}</p>
             </CardContent>
           </Card>
 
@@ -200,8 +206,8 @@ export default function FarmerDashboard() {
                 onClick={() => setLocation('/my-orders')}>
             <CardContent className="p-6 text-center">
               <FaShoppingCart className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">Manage Orders</h3>
-              <p className="text-sm text-gray-600">Track and fulfill your orders</p>
+              <h3 className="font-semibold mb-2">{t('manage_orders')}</h3>
+              <p className="text-sm text-gray-600">{t('track_fulfill_orders')}</p>
             </CardContent>
           </Card>
         </div>
@@ -216,7 +222,7 @@ export default function FarmerDashboard() {
             onClick={() => setLocation('/farmer')}
           >
             <FaHome className="h-5 w-5 mb-1" />
-            <span className="text-xs">Home</span>
+            <span className="text-xs">{t('home')}</span>
           </Button>
           <Button 
             variant="ghost" 
@@ -224,7 +230,7 @@ export default function FarmerDashboard() {
             onClick={() => setLocation('/categories')}
           >
             <FaLeaf className="h-5 w-5 mb-1" />
-            <span className="text-xs">Categories</span>
+            <span className="text-xs">{t('categories')}</span>
           </Button>
           <Button 
             variant="ghost" 
@@ -234,7 +240,7 @@ export default function FarmerDashboard() {
             <div className="bg-green-600 rounded-full p-2 mb-1">
               <FaCamera className="h-4 w-4 text-white" />
             </div>
-            <span className="text-xs">Scan</span>
+            <span className="text-xs">{t('scan')}</span>
           </Button>
           <Button 
             variant="ghost" 
@@ -242,7 +248,7 @@ export default function FarmerDashboard() {
             onClick={() => setLocation('/cart')}
           >
             <FaShoppingCart className="h-5 w-5 mb-1" />
-            <span className="text-xs">Cart</span>
+            <span className="text-xs">{t('cart')}</span>
           </Button>
           <Button 
             variant="ghost" 
@@ -250,7 +256,7 @@ export default function FarmerDashboard() {
             onClick={() => setLocation('/profile')}
           >
             <FaUser className="h-5 w-5 mb-1" />
-            <span className="text-xs">Profile</span>
+            <span className="text-xs">{t('profile')}</span>
           </Button>
         </div>
       </nav>
