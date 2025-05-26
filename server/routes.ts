@@ -536,7 +536,7 @@ export function registerRoutes(app: Express): Server {
 
       const apiKey =
         "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";
-      const endpoint = "https://openrouter.ai/api/v1"; // Microsoft Phi-4 is accessed via OpenAI-compatible APIs
+      const endpoint = "https://openrouter.ai/api/v1/chat/completions";
 
       const response = await fetch(endpoint, {
         method: "POST",
