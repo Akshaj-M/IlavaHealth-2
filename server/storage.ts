@@ -1,116 +1,112 @@
-import { db } from './db';
-import { users, sessions, otpCodes, type User, type InsertUser } from '../shared/schema';
-import { eq, and, gt } from 'drizzle-orm';
+
+// In-memory storage for demo purposes (no database required)
+interface User {
+  id: number;
+  email?: string;
+  phone?: string;
+  passwordHash?: string;
+  firstName?: string;
+  lastName?: string;
+  userType: string;
+  googleId?: string;
+  isEmailVerified?: boolean;
+  isPhoneVerified?: boolean;
+  profileImage?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// In-memory user storage
+const users: User[] = [
+  {
+    id: 1,
+    email: "test@example.com",
+    passwordHash: "$2b$10$xyz", // This would be the hash of "password"
+    firstName: "Test",
+    lastName: "User",
+    userType: "buyer",
+    isEmailVerified: true,
+    isPhoneVerified: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: 2,
+    email: "farmer@example.com",
+    passwordHash: "$2b$10$abc", // This would be the hash of "password"
+    firstName: "John",
+    lastName: "Farmer",
+    userType: "farmer",
+    isEmailVerified: true,
+    isPhoneVerified: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
+
+let nextUserId = 3;
 
 export const storage = {
-  async createUser(userData: Partial<InsertUser>): Promise<User> {
-    const [user] = await db.insert(users).values({
-      ...userData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }).returning();
-    return user;
+  async getAllUsers(): Promise<User[]> {
+    return Promise.resolve([...users]);
   },
 
   async getUserById(id: number): Promise<User | null> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || null;
+    const user = users.find(u => u.id === id);
+    return Promise.resolve(user || null);
   },
 
   async getUserByEmail(email: string): Promise<User | null> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user || null;
+    const user = users.find(u => u.email === email);
+    return Promise.resolve(user || null);
   },
 
   async getUserByPhone(phone: string): Promise<User | null> {
-    const [user] = await db.select().from(users).where(eq(users.phone, phone));
-    return user || null;
+    const user = users.find(u => u.phone === phone);
+    return Promise.resolve(user || null);
   },
 
   async getUserByGoogleId(googleId: string): Promise<User | null> {
-    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
-    return user || null;
+    const user = users.find(u => u.googleId === googleId);
+    return Promise.resolve(user || null);
   },
 
-  async updateUserGoogleId(userId: number, googleId: string): Promise<void> {
-    await db.update(users).set({ 
-      googleId, 
-      updatedAt: new Date() 
-    }).where(eq(users.id, userId));
+  async createUser(userData: Partial<User>): Promise<User> {
+    const newUser: User = {
+      id: nextUserId++,
+      email: userData.email,
+      phone: userData.phone,
+      passwordHash: userData.passwordHash,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      userType: userData.userType || "buyer",
+      googleId: userData.googleId,
+      isEmailVerified: userData.isEmailVerified || false,
+      isPhoneVerified: userData.isPhoneVerified || false,
+      profileImage: userData.profileImage,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    users.push(newUser);
+    return Promise.resolve(newUser);
   },
 
-  async updateUserPhoneVerification(userId: number, isVerified: boolean): Promise<void> {
-    await db.update(users).set({ 
-      isPhoneVerified: isVerified,
-      updatedAt: new Date() 
-    }).where(eq(users.id, userId));
+  async updateUserPhoneVerification(userId: number, isVerified: boolean): Promise<User | null> {
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      user.isPhoneVerified = isVerified;
+      user.updatedAt = new Date();
+    }
+    return Promise.resolve(user || null);
   },
 
-  async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users);
-  },
-
-  async getUserByAppleId(appleId: string): Promise<User | null> {
-      const [user] = await db.select().from(users).where(eq(users.appleId, appleId));
-      return user || null;
-  },
-
-  async updateUserAppleId(userId: number, appleId: string): Promise<void> {
-      await db.update(users).set({
-          appleId,
-          updatedAt: new Date()
-      }).where(eq(users.id, userId));
-  },
-  async createSession(userId: number, token: string, expiresAt: Date) {
-      const [session] = await db.insert(sessions).values({
-          userId,
-          token,
-          expiresAt,
-          createdAt: new Date()
-      }).returning();
-      return session;
-  },
-
-  async getSessionByToken(token: string) {
-      const [session] = await db.select()
-          .from(sessions)
-          .where(
-              eq(sessions.token, token)
-          );
-      return session;
-  },
-
-  async deleteSession(token: string) {
-      await db.delete(sessions).where(eq(sessions.token, token));
-  },
-  async createOTP(otpData: { phone: string; code: string; expiresAt: Date; }) {
-      await db.delete(otpCodes).where(eq(otpCodes.phone, otpData.phone));
-
-      const [otp] = await db.insert(otpCodes).values({
-          ...otpData,
-          createdAt: new Date()
-      }).returning();
-      return otp;
-  },
-
-  async verifyOTP(phone: string, code: string) {
-      const [otpRecord] = await db.select()
-          .from(otpCodes)
-          .where(
-              and(
-                  eq(otpCodes.phone, phone),
-                  eq(otpCodes.code, code),
-                  eq(otpCodes.verified, false),
-                  gt(otpCodes.expiresAt, new Date())
-              )
-          );
-
-      if (otpRecord) {
-          await db.update(otpCodes)
-              .set({ verified: true })
-              .where(eq(otpCodes.id, otpRecord.id));
-          return true;
-      }
-      return false;
+  async updateUserGoogleId(userId: number, googleId: string): Promise<User | null> {
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      user.googleId = googleId;
+      user.updatedAt = new Date();
+    }
+    return Promise.resolve(user || null);
   },
 };

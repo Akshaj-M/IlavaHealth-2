@@ -18,7 +18,7 @@ localPort = 5000
 externalPort = 80
 
 [workflows]
-runButton = "Setup and Start"
+runButton = "API Only Start"
 
 [[workflows.workflow]]
 name = "Project"
@@ -46,6 +46,15 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npx drizzle-kit push"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+
+[[workflows.workflow]]
+name = "API Only Start"
+author = 43114973
+mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
