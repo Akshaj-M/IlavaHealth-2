@@ -184,48 +184,70 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     try {
-      // For Google OAuth, you would typically use Google's JavaScript API
-      // This is a simplified version - in production, you'd integrate with Google's SDK
-      
-      // For now, we'll simulate the Google OAuth flow
-      // In a real implementation, you would:
-      // 1. Load Google's JavaScript API
-      // 2. Initialize the Google Auth client
-      // 3. Handle the sign-in flow
-      // 4. Get the ID token from Google
-      
-      alert('Google OAuth integration requires Google Client ID setup. Please configure GOOGLE_CLIENT_ID environment variable.');
-      
-      // Example of what the actual implementation would look like:
-      /*
-      const idToken = await getGoogleIdToken(); // This would come from Google's SDK
-      
-      const response = await fetch('/api/auth/google', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          idToken,
-          userType
-        }),
+      // Load Google Identity Services script if not already loaded
+      if (!window.google) {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+        
+        await new Promise((resolve) => {
+          script.onload = resolve;
+        });
+      }
+
+      // Initialize Google Identity Services
+      window.google.accounts.id.initialize({
+        client_id: '1089068036655-b4a54jrqchpjjvo3jfvtotlbfstpd4p7.apps.googleusercontent.com', // Your Google Client ID
+        callback: async (response: any) => {
+          try {
+            const apiResponse = await fetch('/api/auth/google', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                idToken: response.credential,
+                userType
+              }),
+            });
+
+            const result = await apiResponse.json();
+
+            if (apiResponse.ok) {
+              localStorage.setItem('token', result.token);
+              localStorage.setItem('user', JSON.stringify(result.user));
+              
+              const redirectPath = result.user.userType === 'farmer' ? '/farmer' : '/buyer';
+              setLocation(redirectPath);
+            } else {
+              alert(result.error || 'Google login failed');
+            }
+          } catch (error) {
+            console.error('Google login error:', error);
+            alert('Network error during Google login. Please try again.');
+          }
+        }
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
-        
-        const redirectPath = result.user.userType === 'farmer' ? '/farmer' : '/buyer';
-        setLocation(redirectPath);
-      } else {
-        alert(result.error || 'Google login failed');
-      }
-      */
+      // Prompt the user to select a Google account
+      window.google.accounts.id.prompt((notification: any) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // Fallback to popup if prompt is not displayed
+          window.google.accounts.id.renderButton(
+            document.getElementById('google-signin-button'),
+            {
+              theme: 'outline',
+              size: 'large',
+              width: '100%'
+            }
+          );
+        }
+      });
     } catch (error) {
       console.error('Google login error:', error);
-      alert('Google login not available at this time.');
+      alert('Google login initialization failed. Please try again.');
     }
   };
 
@@ -260,6 +282,7 @@ export default function Login() {
           <FaGoogle />
           <span>Continue with Google</span>
         </button>
+        <div id="google-signin-button" style={{ display: 'none' }}></div>
       </div>
 
       <p className={styles.signupText}>
