@@ -199,7 +199,7 @@ export default function Login() {
 
       // Initialize Google Identity Services
       window.google.accounts.id.initialize({
-        client_id: '1089068036655-b4a54jrqchpjjvo3jfvtotlbfstpd4p7.apps.googleusercontent.com', // Your Google Client ID
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '1089068036655-b4a54jrqchpjjvo3jfvtotlbfstpd4p7.apps.googleusercontent.com',
         callback: async (response: any) => {
           try {
             const apiResponse = await fetch('/api/auth/google', {

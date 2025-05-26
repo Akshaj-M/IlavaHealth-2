@@ -106,9 +106,11 @@ export function registerRoutes(app: Express): Server {
   // Email/Password Login
   app.post('/api/auth/login', async (req, res) => {
     try {
+      console.log('Login attempt for:', req.body.email);
       const { email, password } = req.body;
 
       if (!email || !password) {
+        console.log('Missing email or password');
         return res.status(400).json({ error: 'Email and password are required' });
       }
 
@@ -169,9 +171,11 @@ export function registerRoutes(app: Express): Server {
   // Phone/OTP - Verify OTP and Login/Register (Testing mode - accepts any 6-digit code)
   app.post('/api/auth/verify-otp', async (req, res) => {
     try {
+      console.log('OTP verification attempt for phone:', req.body.phone);
       const { phone, otp, userType, firstName, lastName } = req.body;
 
       if (!phone || !otp) {
+        console.log('Missing phone or OTP');
         return res.status(400).json({ error: 'Phone and OTP are required' });
       }
 
