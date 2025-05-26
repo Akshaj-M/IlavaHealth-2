@@ -1,107 +1,140 @@
-import { 
-  users, 
-  products, 
-  cartItems, 
-  favorites, 
-  type User, 
-  type InsertUser, 
-  type Product, 
-  type InsertProduct,
-  type CartItem,
-  type InsertCartItem,
-  type Favorite,
-  type InsertFavorite
-} from "@shared/schema";
-import { db } from "./db";
-import { eq } from "drizzle-orm";
 
-export interface IStorage {
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  getUserByPhone(phoneNumber: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  getProducts(): Promise<Product[]>;
-  getProductById(id: number): Promise<Product | undefined>;
-  getProductsByFarmerId(farmerId: number): Promise<Product[]>;
-  createProduct(product: InsertProduct): Promise<Product>;
-  addToCart(cartItem: InsertCartItem): Promise<CartItem>;
-  getCartByUserId(userId: number): Promise<CartItem[]>;
-  removeFromCart(id: number): Promise<void>;
-  addToFavorites(favorite: InsertFavorite): Promise<Favorite>;
-  getFavoritesByUserId(userId: number): Promise<Favorite[]>;
-  removeFromFavorites(id: number): Promise<void>;
+import { db } from "./db";
+import { users, otpCodes, sessions } from "@shared/schema";
+import { eq, and, gt } from "drizzle-orm";
+
+export interface CreateUserData {
+  email?: string;
+  phone?: string;
+  passwordHash?: string;
+  firstName?: string;
+  lastName?: string;
+  userType: string;
+  googleId?: string;
+  appleId?: string;
+  profileImage?: string;
+  isEmailVerified?: boolean;
+  isPhoneVerified?: boolean;
 }
 
-export class DatabaseStorage implements IStorage {
-  async getUser(id: number): Promise<User | undefined> {
+export interface CreateOTPData {
+  phone: string;
+  code: string;
+  expiresAt: Date;
+}
+
+export const storage = {
+  // User methods
+  async createUser(userData: CreateUserData) {
+    const [user] = await db.insert(users).values({
+      ...userData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return user;
+  },
+
+  async getUserById(id: number) {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
-  }
+  },
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
-  }
-
-  async getUserByEmail(email: string): Promise<User | undefined> {
+  async getUserByEmail(email: string) {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
-  }
+  },
 
-  async getUserByPhone(phoneNumber: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.phoneNumber, phoneNumber));
+  async getUserByPhone(phone: string) {
+    const [user] = await db.select().from(users).where(eq(users.phone, phone));
     return user;
-  }
+  },
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
+  async getUserByGoogleId(googleId: string) {
+    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
     return user;
-  }
+  },
 
-  async getProducts(): Promise<Product[]> {
-    return await db.select().from(products);
-  }
+  async getUserByAppleId(appleId: string) {
+    const [user] = await db.select().from(users).where(eq(users.appleId, appleId));
+    return user;
+  },
 
-  async getProductById(id: number): Promise<Product | undefined> {
-    const [product] = await db.select().from(products).where(eq(products.id, id));
-    return product;
-  }
+  async updateUserGoogleId(userId: number, googleId: string) {
+    await db.update(users)
+      .set({ googleId, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  },
 
-  async getProductsByFarmerId(farmerId: number): Promise<Product[]> {
-    return await db.select().from(products).where(eq(products.farmerId, farmerId));
-  }
+  async updateUserAppleId(userId: number, appleId: string) {
+    await db.update(users)
+      .set({ appleId, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  },
 
-  async createProduct(product: InsertProduct): Promise<Product> {
-    const [newProduct] = await db.insert(products).values(product).returning();
-    return newProduct;
-  }
+  async updateUserPhoneVerification(userId: number, isVerified: boolean) {
+    await db.update(users)
+      .set({ isPhoneVerified: isVerified, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+  },
 
-  async addToCart(cartItem: InsertCartItem): Promise<CartItem> {
-    const [newCartItem] = await db.insert(cartItems).values(cartItem).returning();
-    return newCartItem;
-  }
+  // OTP methods
+  async createOTP(otpData: CreateOTPData) {
+    // Delete any existing OTPs for this phone
+    await db.delete(otpCodes).where(eq(otpCodes.phone, otpData.phone));
+    
+    const [otp] = await db.insert(otpCodes).values({
+      ...otpData,
+      createdAt: new Date()
+    }).returning();
+    return otp;
+  },
 
-  async getCartByUserId(userId: number): Promise<CartItem[]> {
-    return await db.select().from(cartItems).where(eq(cartItems.userId, userId));
-  }
+  async verifyOTP(phone: string, code: string) {
+    const [otpRecord] = await db.select()
+      .from(otpCodes)
+      .where(
+        and(
+          eq(otpCodes.phone, phone),
+          eq(otpCodes.code, code),
+          eq(otpCodes.verified, false),
+          gt(otpCodes.expiresAt, new Date())
+        )
+      );
 
-  async removeFromCart(id: number): Promise<void> {
-    await db.delete(cartItems).where(eq(cartItems.id, id));
-  }
+    if (otpRecord) {
+      // Mark OTP as verified
+      await db.update(otpCodes)
+        .set({ verified: true })
+        .where(eq(otpCodes.id, otpRecord.id));
+      return true;
+    }
+    return false;
+  },
 
-  async addToFavorites(favorite: InsertFavorite): Promise<Favorite> {
-    const [newFavorite] = await db.insert(favorites).values(favorite).returning();
-    return newFavorite;
-  }
+  // Session methods
+  async createSession(userId: number, token: string, expiresAt: Date) {
+    const [session] = await db.insert(sessions).values({
+      userId,
+      token,
+      expiresAt,
+      createdAt: new Date()
+    }).returning();
+    return session;
+  },
 
-  async getFavoritesByUserId(userId: number): Promise<Favorite[]> {
-    return await db.select().from(favorites).where(eq(favorites.userId, userId));
-  }
+  async getSessionByToken(token: string) {
+    const [session] = await db.select()
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.token, token),
+          gt(sessions.expiresAt, new Date())
+        )
+      );
+    return session;
+  },
 
-  async removeFromFavorites(id: number): Promise<void> {
-    await db.delete(favorites).where(eq(favorites.id, id));
+  async deleteSession(token: string) {
+    await db.delete(sessions).where(eq(sessions.token, token));
   }
-}
-
-export const storage = new DatabaseStorage();
+};

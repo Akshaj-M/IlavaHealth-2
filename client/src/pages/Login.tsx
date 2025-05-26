@@ -93,42 +93,181 @@ export default function Login() {
     setLoginMethod(LoginMethod.OPTIONS);
   };
 
-  const handleEmailLogin = (data: EmailForm) => {
-    console.log('Email login with:', data);
-    // In a real app, we would call an API here
-    // For now, simulate successful login and redirect based on user type
-    const redirectPath = userType === 'farmer' ? '/farmer' : '/buyer';
-    setLocation(redirectPath);
+  const handleEmailLogin = async (data: EmailForm) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Store token and user info
+        localStorage.setItem('token', result.token);
+        localStorage.setItem('user', JSON.stringify(result.user));
+        
+        // Redirect based on user type
+        const redirectPath = result.user.userType === 'farmer' ? '/farmer' : '/buyer';
+        setLocation(redirectPath);
+      } else {
+        alert(result.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Network error. Please try again.');
+    }
   };
 
-  const handlePhoneLogin = (data: PhoneForm) => {
-    console.log('Phone login with:', data);
-    setPhoneForOtp(data.phoneNumber);
-    setLoginMethod(LoginMethod.OTP);
+  const handlePhoneLogin = async (data: PhoneForm) => {
+    try {
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phone: data.phoneNumber }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setPhoneForOtp(data.phoneNumber);
+        setLoginMethod(LoginMethod.OTP);
+        alert('OTP sent to your phone number');
+      } else {
+        alert(result.error || 'Failed to send OTP');
+      }
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      alert('Network error. Please try again.');
+    }
   };
 
-  const handleOtpVerification = (data: OtpForm) => {
-    console.log('OTP verification with:', data);
-    // In a real app, we would verify OTP with an API
-    // For now, simulate successful verification and redirect based on user type
-    const redirectPath = userType === 'farmer' ? '/farmer' : '/buyer';
-    setLocation(redirectPath);
+  const handleOtpVerification = async (data: OtpForm) => {
+    try {
+      const otp = Object.values(data).join('');
+      
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phone: phoneForOtp,
+          otp,
+          userType // Include userType for new user registration
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Store token and user info
+        localStorage.setItem('token', result.token);
+        localStorage.setItem('user', JSON.stringify(result.user));
+        
+        // Redirect based on user type
+        const redirectPath = result.user.userType === 'farmer' ? '/farmer' : '/buyer';
+        setLocation(redirectPath);
+      } else {
+        alert(result.error || 'OTP verification failed');
+      }
+    } catch (error) {
+      console.error('OTP verification error:', error);
+      alert('Network error. Please try again.');
+    }
   };
 
-  const handleGoogleLogin = () => {
-    console.log('Google login clicked');
-    // In a real app, we would integrate with Google OAuth
-    // For now, simulate successful login and redirect based on user type
-    const redirectPath = userType === 'farmer' ? '/farmer' : '/buyer';
-    setLocation(redirectPath);
+  const handleGoogleLogin = async () => {
+    try {
+      // For Google OAuth, you would typically use Google's JavaScript API
+      // This is a simplified version - in production, you'd integrate with Google's SDK
+      
+      // For now, we'll simulate the Google OAuth flow
+      // In a real implementation, you would:
+      // 1. Load Google's JavaScript API
+      // 2. Initialize the Google Auth client
+      // 3. Handle the sign-in flow
+      // 4. Get the ID token from Google
+      
+      alert('Google OAuth integration requires Google Client ID setup. Please configure GOOGLE_CLIENT_ID environment variable.');
+      
+      // Example of what the actual implementation would look like:
+      /*
+      const idToken = await getGoogleIdToken(); // This would come from Google's SDK
+      
+      const response = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          idToken,
+          userType
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', result.token);
+        localStorage.setItem('user', JSON.stringify(result.user));
+        
+        const redirectPath = result.user.userType === 'farmer' ? '/farmer' : '/buyer';
+        setLocation(redirectPath);
+      } else {
+        alert(result.error || 'Google login failed');
+      }
+      */
+    } catch (error) {
+      console.error('Google login error:', error);
+      alert('Google login not available at this time.');
+    }
   };
 
-  const handleAppleLogin = () => {
-    console.log('Apple login clicked');
-    // In a real app, we would integrate with Apple Sign In
-    // For now, simulate successful login and redirect based on user type
-    const redirectPath = userType === 'farmer' ? '/farmer' : '/buyer';
-    setLocation(redirectPath);
+  const handleAppleLogin = async () => {
+    try {
+      // For Apple Sign In, you would typically use Apple's JavaScript API
+      // This is a simplified version - in production, you'd integrate with Apple's SDK
+      
+      alert('Apple Sign In integration requires Apple Developer setup. Please configure Apple Sign In credentials.');
+      
+      // Example of what the actual implementation would look like:
+      /*
+      const appleAuthResult = await getAppleAuthToken(); // This would come from Apple's SDK
+      
+      const response = await fetch('/api/auth/apple', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          identityToken: appleAuthResult.identityToken,
+          user: appleAuthResult.user,
+          userType
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('token', result.token);
+        localStorage.setItem('user', JSON.stringify(result.user));
+        
+        const redirectPath = result.user.userType === 'farmer' ? '/farmer' : '/buyer';
+        setLocation(redirectPath);
+      } else {
+        alert(result.error || 'Apple login failed');
+      }
+      */
+    } catch (error) {
+      console.error('Apple login error:', error);
+      alert('Apple Sign In not available at this time.');
+    }
   };
 
   const renderLoginOptions = () => (
@@ -171,7 +310,7 @@ export default function Login() {
 
       <p className={styles.signupText}>
         Don't have an account?{' '}
-        <a href="#signup" className={styles.signupLink}>Sign up</a>
+        <a href="#signup" className={styles.signupLink} onClick={() => setLocation('/register')}>Sign up</a>
       </p>
     </>
   );

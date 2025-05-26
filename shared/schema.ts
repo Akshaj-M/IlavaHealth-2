@@ -3,24 +3,38 @@ import { InferSelectModel, relations } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
-// Users table
-export const users = pgTable('users', {
-  id: serial('id').primaryKey(),
-  username: varchar('username', { length: 50 }).notNull().unique(),
-  email: varchar('email', { length: 100 }).unique(),
-  phoneNumber: varchar('phone_number', { length: 15 }).unique(),
-  password: varchar('password', { length: 100 }),
-  userType: varchar('user_type', { length: 10 }).notNull(), // 'farmer' or 'buyer'
-  fullName: varchar('full_name', { length: 100 }),
-  profileImage: text('profile_image'),
-  authProvider: varchar('auth_provider', { length: 20 }), // 'google', 'apple', 'email', 'phone'
-  // Farmer profile fields
-  farmerType: varchar('farmer_type', { length: 50 }), // 'horticulture', 'sericulture', etc.
-  location: text('location'),
-  farmingTypes: text('farming_types'), // JSON array of farming types
-  bio: text('bio'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 255 }).unique(),
+  phone: varchar("phone", { length: 20 }).unique(),
+  passwordHash: varchar("password_hash", { length: 255 }),
+  firstName: varchar("first_name", { length: 100 }),
+  lastName: varchar("last_name", { length: 100 }),
+  userType: varchar("user_type", { length: 20 }).notNull(), // 'farmer' or 'buyer'
+  googleId: varchar("google_id", { length: 255 }).unique(),
+  appleId: varchar("apple_id", { length: 255 }).unique(),
+  isEmailVerified: boolean("is_email_verified").default(false),
+  isPhoneVerified: boolean("is_phone_verified").default(false),
+  profileImage: text("profile_image"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const otpCodes = pgTable("otp_codes", {
+  id: serial("id").primaryKey(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  code: varchar("code", { length: 6 }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  verified: boolean("verified").default(false),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const sessions = pgTable("sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow()
 });
 
 // Products table
@@ -49,6 +63,7 @@ export const wasteScans = pgTable('waste_scans', {
   confidence: decimal('confidence', { precision: 5, scale: 4 }), // ML confidence score
   scanResults: text('scan_results'), // JSON with detailed analysis
   createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 // Orders table
@@ -159,18 +174,17 @@ export type OrderItem = InferSelectModel<typeof orderItems>;
 
 // Schemas for validation
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
   email: true,
-  phoneNumber: true,
-  password: true,
+  phone: true,
+  passwordHash: true,
+  firstName: true,
+  lastName: true,
   userType: true,
-  fullName: true,
+  googleId: true,
+  appleId: true,
+  isEmailVerified: true,
+  isPhoneVerified: true,
   profileImage: true,
-  authProvider: true,
-  farmerType: true,
-  location: true,
-  farmingTypes: true,
-  bio: true,
 });
 
 export const insertProductSchema = createInsertSchema(products).pick({
