@@ -20,6 +20,7 @@ import {
   FaFilter
 } from 'react-icons/fa';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import AIAssistant from '@/components/AIAssistant';
 
 interface Product {
   id: number;
@@ -493,6 +494,9 @@ export default function BuyerDashboard() {
           </Button>
         </div>
       </nav>
+
+      {/* AI Assistant */}
+      <AIAssistant />
     </div>
   );
 }

@@ -17,6 +17,7 @@ import {
   FaWeight
 } from 'react-icons/fa';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import AIAssistant from '@/components/AIAssistant';
 
 export default function FarmerDashboard() {
   const [, setLocation] = useLocation();
@@ -54,7 +55,7 @@ export default function FarmerDashboard() {
                       <FaLeaf className="h-6 w-6 text-green-600" />
                       <span className="font-semibold text-green-700">Farmer Menu</span>
                     </div>
-                    
+
                     <nav className="space-y-2">
                       <Button 
                         variant="ghost" 
@@ -64,7 +65,7 @@ export default function FarmerDashboard() {
                         <FaHome className="mr-2 h-4 w-4" />
                         Dashboard
                       </Button>
-                      
+
                       <Button 
                         variant="ghost" 
                         className="w-full justify-start"
@@ -73,7 +74,7 @@ export default function FarmerDashboard() {
                         <FaCamera className="mr-2 h-4 w-4" />
                         Sell Your Waste
                       </Button>
-                      
+
                       <Button 
                         variant="ghost" 
                         className="w-full justify-start"
@@ -82,7 +83,7 @@ export default function FarmerDashboard() {
                         <FaShoppingCart className="mr-2 h-4 w-4" />
                         My Orders
                       </Button>
-                      
+
                       <Button 
                         variant="ghost" 
                         className="w-full justify-start"
@@ -91,7 +92,7 @@ export default function FarmerDashboard() {
                         <FaHeart className="mr-2 h-4 w-4" />
                         Favorites
                       </Button>
-                      
+
                       <Button 
                         variant="ghost" 
                         className="w-full justify-start"
@@ -105,10 +106,10 @@ export default function FarmerDashboard() {
                 </div>
               </SheetContent>
             </Sheet>
-            
+
             <h1 className="text-xl font-bold text-gray-900">Farmer Dashboard</h1>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <FaLeaf className="h-8 w-8 text-green-600" />
             <span className="font-bold text-green-700">ILAVA</span>
@@ -194,7 +195,7 @@ export default function FarmerDashboard() {
               <p className="text-sm text-gray-600">Use AI to identify and price your waste</p>
             </CardContent>
           </Card>
-          
+
           <Card className="cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() => setLocation('/my-orders')}>
             <CardContent className="p-6 text-center">
@@ -253,6 +254,7 @@ export default function FarmerDashboard() {
           </Button>
         </div>
       </nav>
+      <AIAssistant />
     </div>
   );
 }
