@@ -13,6 +13,9 @@ const sql = postgres(connectionString, {
   max: 1,
   transform: {
     undefined: null
+  },
+  connection: {
+    ssl: connectionString.includes('localhost') ? false : { rejectUnauthorized: false }
   }
 });
 
