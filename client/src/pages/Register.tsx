@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import styles from '../styles/Login.module.css';
 import ilavaLogo from '../assets/ilava-logo.svg';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaGoogle } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -69,7 +68,7 @@ export default function Register() {
         localStorage.setItem('token', result.token);
         localStorage.setItem('user', JSON.stringify(result.user));
         localStorage.setItem('userType', result.user.userType);
-        
+
         // Redirect based on user type
         const redirectPath = result.user.userType === 'farmer' ? '/farmer' : '/buyer';
         setLocation(redirectPath);

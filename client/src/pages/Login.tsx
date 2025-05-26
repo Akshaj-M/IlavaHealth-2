@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import styles from '../styles/Login.module.css';
 import ilavaLogo from '../assets/ilava-logo.svg';
-import { FaArrowLeft, FaGoogle, FaApple } from 'react-icons/fa';
+import { FaArrowLeft, FaGoogle } from 'react-icons/fa';
 import { BsPhone } from 'react-icons/bs';
 import { MdEmail } from 'react-icons/md';
 import { useForm } from 'react-hook-form';
@@ -137,7 +137,7 @@ export default function Login() {
       if (response.ok) {
         setPhoneForOtp(data.phoneNumber);
         setLoginMethod(LoginMethod.OTP);
-        alert('OTP sent to your phone number');
+        alert('Testing mode: Enter any 6-digit number as OTP');
       } else {
         alert(result.error || 'Failed to send OTP');
       }
@@ -229,46 +229,7 @@ export default function Login() {
     }
   };
 
-  const handleAppleLogin = async () => {
-    try {
-      // For Apple Sign In, you would typically use Apple's JavaScript API
-      // This is a simplified version - in production, you'd integrate with Apple's SDK
-      
-      alert('Apple Sign In integration requires Apple Developer setup. Please configure Apple Sign In credentials.');
-      
-      // Example of what the actual implementation would look like:
-      /*
-      const appleAuthResult = await getAppleAuthToken(); // This would come from Apple's SDK
-      
-      const response = await fetch('/api/auth/apple', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          identityToken: appleAuthResult.identityToken,
-          user: appleAuthResult.user,
-          userType
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('user', JSON.stringify(result.user));
-        
-        const redirectPath = result.user.userType === 'farmer' ? '/farmer' : '/buyer';
-        setLocation(redirectPath);
-      } else {
-        alert(result.error || 'Apple login failed');
-      }
-      */
-    } catch (error) {
-      console.error('Apple login error:', error);
-      alert('Apple Sign In not available at this time.');
-    }
-  };
+  
 
   const renderLoginOptions = () => (
     <>
@@ -298,13 +259,6 @@ export default function Login() {
         >
           <FaGoogle />
           <span>Continue with Google</span>
-        </button>
-        <button 
-          className={`${styles.socialButton} ${styles.appleButton}`} 
-          onClick={handleAppleLogin}
-        >
-          <FaApple />
-          <span>Continue with Apple</span>
         </button>
       </div>
 

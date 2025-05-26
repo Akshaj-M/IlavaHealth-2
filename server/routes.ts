@@ -143,7 +143,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Phone/OTP - Send OTP
+  // Phone/OTP - Send OTP (Testing mode - no actual OTP sent)
   app.post('/api/auth/send-otp', async (req, res) => {
     try {
       const { phone } = req.body;
@@ -152,35 +152,21 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: 'Phone number is required' });
       }
 
-      if (!twilioClient) {
-        return res.status(500).json({ error: 'SMS service not configured' });
+      // Validate phone number format (10 digits)
+      const phoneRegex = /^\d{10}$/;
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).json({ error: 'Phone number must be exactly 10 digits' });
       }
 
-      const otp = generateOTP();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-      // Store OTP in database
-      await storage.createOTP({
-        phone,
-        code: otp,
-        expiresAt
-      });
-
-      // Send SMS
-      await twilioClient.messages.create({
-        body: `Your ILava verification code is: ${otp}`,
-        from: TWILIO_PHONE_NUMBER,
-        to: phone
-      });
-
-      res.json({ success: true, message: 'OTP sent successfully' });
+      // For testing: always return success without sending actual OTP
+      res.json({ success: true, message: 'OTP sent successfully (Testing mode)' });
     } catch (error) {
       console.error('Send OTP error:', error);
       res.status(500).json({ error: 'Failed to send OTP' });
     }
   });
 
-  // Phone/OTP - Verify OTP and Login/Register
+  // Phone/OTP - Verify OTP and Login/Register (Testing mode - accepts any 6-digit code)
   app.post('/api/auth/verify-otp', async (req, res) => {
     try {
       const { phone, otp, userType, firstName, lastName } = req.body;
@@ -189,11 +175,20 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ error: 'Phone and OTP are required' });
       }
 
-      // Verify OTP
-      const isValidOTP = await storage.verifyOTP(phone, otp);
-      if (!isValidOTP) {
-        return res.status(401).json({ error: 'Invalid or expired OTP' });
+      // Validate phone number format (10 digits)
+      const phoneRegex = /^\d{10}$/;
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).json({ error: 'Phone number must be exactly 10 digits' });
       }
+
+      // Validate OTP format (6 digits)
+      const otpRegex = /^\d{6}$/;
+      if (!otpRegex.test(otp)) {
+        return res.status(400).json({ error: 'OTP must be exactly 6 digits' });
+      }
+
+      // For testing: accept any 6-digit OTP as valid
+      // In production, you would verify against stored OTP
 
       // Check if user exists
       let user = await storage.getUserByPhone(phone);
@@ -310,72 +305,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Apple Sign In - Verify Apple token and Login/Register
-  app.post('/api/auth/apple', async (req, res) => {
-    try {
-      const { identityToken, userType, user: appleUser } = req.body;
-
-      if (!identityToken) {
-        return res.status(400).json({ error: 'Apple identity token is required' });
-      }
-
-      // For production, you would verify the Apple JWT token here
-      // For now, we'll decode it (in production, use proper verification)
-      const decoded = jwt.decode(identityToken) as any;
-      
-      if (!decoded || !decoded.sub) {
-        return res.status(401).json({ error: 'Invalid Apple token' });
-      }
-
-      const appleId = decoded.sub;
-      const email = decoded.email;
-
-      // Check if user exists
-      let user = await storage.getUserByAppleId(appleId);
-      
-      if (!user && email) {
-        // Check by email if not found by Apple ID
-        user = await storage.getUserByEmail(email);
-        if (user) {
-          // Link Apple account to existing user
-          await storage.updateUserAppleId(user.id, appleId);
-        }
-      }
-
-      if (!user) {
-        // Create new user
-        if (!userType) {
-          return res.status(400).json({ error: 'User type is required for new registrations' });
-        }
-
-        user = await storage.createUser({
-          email,
-          appleId,
-          firstName: appleUser?.name?.firstName,
-          lastName: appleUser?.name?.lastName,
-          userType,
-          isEmailVerified: !!email
-        });
-      }
-
-      const token = generateToken(user.id, user.userType);
-
-      res.json({
-        success: true,
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          userType: user.userType
-        },
-        token
-      });
-    } catch (error) {
-      console.error('Apple auth error:', error);
-      res.status(500).json({ error: 'Apple authentication failed' });
-    }
-  });
+  
 
   // Get current user (protected route)
   app.get('/api/auth/me', async (req, res) => {
