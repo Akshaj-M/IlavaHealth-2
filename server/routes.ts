@@ -485,61 +485,42 @@ export function registerRoutes(app: Express): Server {
     try {
       const { message, context } = req.body;
 
-      // For development/demo purposes, provide contextual responses
-      // In production, you would integrate with Microsoft Phi-4 API here
+      const apiKey = "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";
+      const endpoint = "https://api.openai.com/v1/chat/completions"; // Microsoft Phi-4 is accessed via OpenAI-compatible APIs
 
-      const responses = {
-        pricing: [
-          "Based on current market data, organic compost typically sells for ₹20-35/kg, while crop residues range from ₹10-18/kg. The exact price depends on quality, processing level, and local demand.",
-          "I can help you determine optimal pricing! Factors include: waste type, quality grade, processing level, local market demand, and seasonal variations. What type of organic waste are you looking to price?"
-        ],
-        waste_types: [
-          "You can sell various organic wastes on ILAVA: Crop residues (rice husk, wheat straw), Food waste (fruit peels, vegetable scraps), Garden waste (leaves, branches), Agricultural waste (sugarcane bagasse, coconut coir), and processed compost.",
-          "Our platform accepts: 🌾 Crop residues, 🍎 Fruit waste, 🥬 Vegetable waste, 🌿 Garden trimmings, 🏭 Agricultural by-products, and ♻️ Processed organic fertilizers."
-        ],
-        marketplace: [
-          "ILAVA marketplace connects organic waste sellers with buyers. Simply: 1) Upload waste photos for AI analysis, 2) Get automated pricing suggestions, 3) List your products, 4) Connect with verified buyers, 5) Complete secure transactions.",
-          "Our platform uses AI to analyze your waste, suggest optimal pricing, and match you with relevant buyers in your area. We handle quality verification, secure payments, and logistics coordination."
-        ],
-        trends: [
-          "Current market trends show high demand for vermicompost (₹35-45/kg), rice husk ash for construction (₹15-20/kg), and fruit waste for bio-fertilizer production (₹25-30/kg).",
-          "Seasonal trends: Peak demand for compost during planting seasons (March-June, October-December). Urban areas show growing demand for processed organic fertilizers."
-        ],
-        default: [
-          "I'm here to help with organic waste management, pricing, market insights, and platform guidance. You can ask me about waste types, pricing strategies, buyer connections, or how to optimize your listings.",
-          "As your ILAVA AI assistant, I can help with: waste analysis, market pricing, buyer matching, quality assessment, seasonal trends, and platform features. What would you like to know?"
-        ]
-      };
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "phi-3-mini-128k-instruct", // Make sure this model is supported in your OpenAI account
+          messages: [
+            { role: "system", content: "You are a helpful assistant specialized in organic waste marketplace queries." },
+            { role: "user", content: message }
+          ],
+          temperature: 0.7,
+          max_tokens: 300
+        })
+      });
 
-      // Simple keyword matching for demo (replace with actual Phi-4 API call)
-      let responseKey = 'default';
-      const lowerMessage = message.toLowerCase();
-
-      if (lowerMessage.includes('price') || lowerMessage.includes('pricing') || lowerMessage.includes('cost')) {
-        responseKey = 'pricing';
-      } else if (lowerMessage.includes('waste') && (lowerMessage.includes('type') || lowerMessage.includes('kind') || lowerMessage.includes('sell'))) {
-        responseKey = 'waste_types';
-      } else if (lowerMessage.includes('marketplace') || lowerMessage.includes('work') || lowerMessage.includes('platform')) {
-        responseKey = 'marketplace';
-      } else if (lowerMessage.includes('trend') || lowerMessage.includes('market') || lowerMessage.includes('demand')) {
-        responseKey = 'trends';
+      if (!response.ok) {
+        throw new Error(`Microsoft Phi API error: ${response.statusText}`);
       }
 
-      const responseOptions = responses[responseKey as keyof typeof responses];
-      const selectedResponse = responseOptions[Math.floor(Math.random() * responseOptions.length)];
+      const data = await response.json();
+      const aiResponse = data.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-
-      res.json({ 
-        response: selectedResponse,
-        confidence: 0.85 + Math.random() * 0.15,
-        context: context || 'general'
+      res.json({
+        response: aiResponse,
+        confidence: 0.95, // Optional: use static confidence or compute it later
+        context: context || "general"
       });
 
     } catch (error) {
       console.error("AI Assistant error:", error);
-      res.status(500).json({ error: "Failed to process AI request" });
+      res.status(500).json({ error: "Failed to process AI request using Microsoft Phi API." });
     }
   });
 
