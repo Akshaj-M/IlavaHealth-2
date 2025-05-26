@@ -1,6 +1,6 @@
 import { db } from './db';
-import { users, type User, type InsertUser } from '../shared/schema';
-import { eq, or } from 'drizzle-orm';
+import { users, sessions, otpCodes, type User, type InsertUser } from '../shared/schema';
+import { eq, and, gt } from 'drizzle-orm';
 
 export const storage = {
   async createUser(userData: Partial<InsertUser>): Promise<User> {
@@ -114,6 +114,3 @@ export const storage = {
       return false;
   },
 };
-import { db } from './db';
-import { users, otpCodes, sessions, type User, type InsertUser } from "@shared/schema";
-import { eq, and, gt } from "drizzle-orm";

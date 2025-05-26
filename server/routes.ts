@@ -116,12 +116,17 @@ export function registerRoutes(app: Express): Server {
 
       // Get user by email
       const user = await storage.getUserByEmail(email);
+      console.log('User found:', user ? 'Yes' : 'No');
+      
       if (!user || !user.passwordHash) {
+        console.log('User not found or no password hash');
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
       // Verify password
       const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+      console.log('Password valid:', isValidPassword);
+      
       if (!isValidPassword) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
@@ -140,8 +145,8 @@ export function registerRoutes(app: Express): Server {
         token
       });
     } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      console.error('Login error details:', error);
+      res.status(500).json({ error: 'Internal server error: ' + error.message });
     }
   });
 
