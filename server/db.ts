@@ -9,8 +9,11 @@ if (!process.env.DATABASE_URL) {
 
 const connectionString = process.env.DATABASE_URL!;
 const sql = postgres(connectionString, {
-  ssl: { rejectUnauthorized: false },
+  ssl: connectionString.includes('localhost') ? false : { rejectUnauthorized: false },
   max: 1,
+  transform: {
+    undefined: null
+  }
 });
 
 export const db = drizzle(sql);
